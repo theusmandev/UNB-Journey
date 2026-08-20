@@ -1,11 +1,74 @@
+import { useState } from "react";
+import { projects } from "@/data/projects";
+
+const featuredNodes = projects.filter((p) => p.featured);
+
+// Degrees for each node — same layout as the existing static SVG
+const DEGREES = [0, 60, 120, 180, 240, 300];
+
+// SVG center and orbit radius
+const SVG_CX = 210;
+const SVG_CY = 210;
+const ORBIT_R = 120;
+
+
+
+/**
+ * Per-node label layout — calculated from the angle so labels radiate
+ * outward and never overlap lines, the center icon, or each other.
+ *
+ * Label anchor point = node circle edge + a gap in the radial direction.
+ *   cos > +0.3  → text-anchor "start"  (label extends rightward)
+ *   cos < -0.3  → text-anchor "end"    (label extends leftward)
+ *   |cos| ≤ 0.3 → text-anchor "middle" (top/bottom — centered)
+ *
+ * Vertical dy aligns the text baseline correctly per quadrant.
+ */
+function getLabelLayout(
+  deg: number,
+  cx: number,
+  cy: number
+): { lx: number; ly: number; anchor: "start" | "middle" | "end"; dy: number } {
+  const rad = (deg * Math.PI) / 180;
+  const cosA = Math.cos(rad);
+  const sinA = Math.sin(rad);
+
+  // Place anchor 23px beyond the node circle edge (r=13 + 10px gap)
+  const GAP = 23;
+  const lx = cx + cosA * GAP;
+  const ly = cy + sinA * GAP;
+
+  let anchor: "start" | "middle" | "end" = "middle";
+  if (cosA > 0.3) anchor = "start";
+  else if (cosA < -0.3) anchor = "end";
+
+  // dy = vertical offset from anchor point to text baseline
+  // sin > 0.5  → node is in lower half → push baseline down (+11)
+  // sin < -0.5 → node is in upper half → push baseline up  (−3)
+  // else       → left/right → center on node              (+4)
+  let dy = 4;
+  if (sinA > 0.5) dy = 11;
+  else if (sinA < -0.5) dy = -3;
+
+  return { lx, ly, anchor, dy };
+}
+
 export function EcosystemIllustration() {
+  const [hovered, setHovered] = useState<number | null>(null);
+
   return (
     <div className="relative">
+      {/*
+       * viewBox is expanded slightly on all sides to give permanent labels
+       * room to breathe without being clipped on smaller viewports.
+       * Original was 0 0 420 420; we expand by 30px per side → -30 -30 480 480
+       */}
       <svg
-        viewBox="0 0 420 420"
+        viewBox="-30 -30 480 480"
         role="img"
         aria-label="Illustration of a manuscript unfolding into a connected digital ecosystem of readers, writers, community and platforms"
         className="mx-auto w-full max-w-md"
+        style={{ overflow: "visible" }}
       >
         <defs>
           <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
@@ -14,32 +77,50 @@ export function EcosystemIllustration() {
           </linearGradient>
         </defs>
 
+        {/* Outer dashed spinning ring */}
         <circle
-          cx="210"
-          cy="210"
+          cx={SVG_CX}
+          cy={SVG_CY}
           r="168"
           fill="none"
           stroke="var(--border)"
           strokeDasharray="3 7"
           className="origin-center animate-[spin_60s_linear_infinite]"
         />
-        <circle cx="210" cy="210" r="120" fill="none" stroke="var(--border)" />
 
-        {[0, 60, 120, 180, 240, 300].map((deg, i) => {
+        {/* Inner orbit ring */}
+        <circle cx={SVG_CX} cy={SVG_CY} r={ORBIT_R} fill="none" stroke="var(--border)" />
+
+        {/* Six animated nodes */}
+        {DEGREES.map((deg, i) => {
           const rad = (deg * Math.PI) / 180;
-          const x = 210 + 120 * Math.cos(rad);
-          const y = 210 + 120 * Math.sin(rad);
+          const cx = SVG_CX + ORBIT_R * Math.cos(rad);
+          const cy = SVG_CY + ORBIT_R * Math.sin(rad);
+          const project = featuredNodes[i];
+          const isHovered = hovered === i;
+
+          if (!project) return null;
+
+          const { lx, ly, anchor, dy } = getLabelLayout(deg, cx, cy);
+
           return (
-            <g key={deg}>
+            <g
+              key={deg}
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
+            >
+              {/* Animated connecting line */}
               <line
-                x1="210"
-                y1="210"
-                x2={x}
-                y2={y}
+                x1={SVG_CX}
+                y1={SVG_CY}
+                x2={cx}
+                y2={cy}
                 stroke="var(--gold)"
-                strokeOpacity="0.35"
+                strokeOpacity={isHovered ? 0.75 : 0.35}
+                strokeWidth={isHovered ? 1.5 : 1}
                 strokeDasharray="120"
                 strokeDashoffset="120"
+                style={{ transition: "stroke-opacity 0.2s, stroke-width 0.2s" }}
               >
                 <animate
                   attributeName="stroke-dashoffset"
@@ -50,7 +131,18 @@ export function EcosystemIllustration() {
                   fill="freeze"
                 />
               </line>
-              <circle cx={x} cy={y} r="13" fill="var(--card)" stroke="var(--gold)" opacity="0">
+
+              {/* Circle node */}
+              <circle
+                cx={cx}
+                cy={cy}
+                r={isHovered ? 16 : 13}
+                fill={isHovered ? "var(--gold)" : "var(--card)"}
+                stroke="var(--gold)"
+                strokeWidth={isHovered ? 2 : 1.5}
+                opacity="0"
+                style={{ transition: "r 0.2s, fill 0.2s, stroke-width 0.2s" }}
+              >
                 <animate
                   attributeName="opacity"
                   from="0"
@@ -60,11 +152,44 @@ export function EcosystemIllustration() {
                   fill="freeze"
                 />
               </circle>
+
+              {/*
+               * Permanently visible label — always shown, never gated behind hover.
+               *
+               * Legibility technique: SVG paintOrder="stroke fill" with a thick
+               * background-colored stroke drawn first, then the fill text on top.
+               * This creates a knockout halo against the diagram lines without
+               * needing a separate rect/pill element.
+               *
+               * Color: muted-foreground at rest → gold on hover, matching the site palette.
+               */}
+              <text
+                x={lx}
+                y={ly + dy}
+                textAnchor={anchor}
+                fontSize="9.5"
+                fontFamily="var(--font-sans)"
+                fontWeight="600"
+                letterSpacing="0.01em"
+                fill={isHovered ? "var(--gold)" : "var(--muted-foreground)"}
+                stroke="var(--background)"
+                strokeWidth="3"
+                strokeLinejoin="round"
+                style={{
+                  paintOrder: "stroke fill",
+                  pointerEvents: "none",
+                  userSelect: "none",
+                  transition: "fill 0.2s",
+                }}
+              >
+                {project.name}
+              </text>
             </g>
           );
         })}
 
-        <g>
+        {/* Center book/manuscript icon */}
+        <g style={{ pointerEvents: "none" }}>
           <rect
             x="160"
             y="158"
@@ -77,11 +202,32 @@ export function EcosystemIllustration() {
           <line x1="210" y1="158" x2="210" y2="262" stroke="var(--border)" />
           {[178, 194, 210, 226, 242].map((y) => (
             <g key={y}>
-              <line x1="172" y1={y} x2="200" y2={y} stroke="var(--muted-foreground)" strokeOpacity="0.5" />
-              <line x1="220" y1={y} x2="248" y2={y} stroke="var(--muted-foreground)" strokeOpacity="0.5" />
+              <line
+                x1="172"
+                y1={y}
+                x2="200"
+                y2={y}
+                stroke="var(--muted-foreground)"
+                strokeOpacity="0.5"
+              />
+              <line
+                x1="220"
+                y1={y}
+                x2="248"
+                y2={y}
+                stroke="var(--muted-foreground)"
+                strokeOpacity="0.5"
+              />
             </g>
           ))}
-          <circle cx="210" cy="210" r="60" fill="none" stroke="var(--gold)" strokeOpacity="0.5" />
+          <circle
+            cx="210"
+            cy="210"
+            r="60"
+            fill="none"
+            stroke="var(--gold)"
+            strokeOpacity="0.5"
+          />
         </g>
       </svg>
     </div>
