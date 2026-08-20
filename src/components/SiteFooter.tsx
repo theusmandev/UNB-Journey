@@ -50,7 +50,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-10">
-          <SocialRow compact />
+          <SocialRow compact center />
         </div>
 
         <div className="mt-10 flex flex-col gap-2 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">

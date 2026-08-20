@@ -35,12 +35,26 @@ export function SiteNav() {
         className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3.5"
       >
         <a href="#home" className="flex items-center gap-2.5">
-          <span
-            className="display grid h-8 w-8 place-items-center rounded-sm bg-accent text-sm text-accent-foreground"
+          <div
+            className="flex h-8 w-8 items-center justify-center text-accent"
             aria-hidden="true"
           >
-            ن
-          </span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              className="h-7 w-7"
+            >
+              <rect x="4" y="4" width="16" height="16" rx="1.5" strokeWidth="1.5" />
+              <line x1="12" y1="4" x2="12" y2="20" strokeWidth="1.5" />
+              <line x1="6" y1="8" x2="10" y2="8" strokeWidth="1" strokeOpacity="0.4" />
+              <line x1="14" y1="8" x2="18" y2="8" strokeWidth="1" strokeOpacity="0.4" />
+              <line x1="6" y1="12" x2="10" y2="12" strokeWidth="1" strokeOpacity="0.4" />
+              <line x1="14" y1="12" x2="18" y2="12" strokeWidth="1" strokeOpacity="0.4" />
+              <line x1="6" y1="16" x2="10" y2="16" strokeWidth="1" strokeOpacity="0.4" />
+              <line x1="14" y1="16" x2="18" y2="16" strokeWidth="1" strokeOpacity="0.4" />
+            </svg>
+          </div>
           <span className="display text-sm tracking-tight text-foreground sm:text-base">
             Urdu Novel Bank
           </span>

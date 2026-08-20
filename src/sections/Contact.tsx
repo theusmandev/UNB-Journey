@@ -27,7 +27,7 @@ export function Contact() {
           </a>
 
           <div className="mt-8 flex justify-center">
-            <SocialRow />
+            <SocialRow center />
           </div>
 
           <p className="mt-8 inline-flex items-center gap-2 rounded-full border border-dashed border-border px-4 py-2 text-sm text-muted-foreground">
