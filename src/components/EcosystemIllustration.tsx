@@ -80,7 +80,7 @@ export function EcosystemIllustration() {
         */}
         <style>{`
           .eco-label { font-size: 13px; }
-          @media (min-width: 640px) { .eco-label { font-size: 9.5px; } }
+          @media (min-width: 640px) { .eco-label { font-size: 14px; } }
         `}</style>
         <defs>
           <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
