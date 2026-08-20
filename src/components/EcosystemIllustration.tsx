@@ -33,8 +33,8 @@ function getLabelLayout(
   const cosA = Math.cos(rad);
   const sinA = Math.sin(rad);
 
-  // Place anchor 23px beyond the node circle edge (r=13 + 10px gap)
-  const GAP = 23;
+  // Place anchor 26px beyond the node circle edge (r=13 + 13px gap)
+  const GAP = 26;
   const lx = cx + cosA * GAP;
   const ly = cy + sinA * GAP;
 
@@ -59,17 +59,29 @@ export function EcosystemIllustration() {
   return (
     <div className="relative">
       {/*
-       * viewBox is expanded slightly on all sides to give permanent labels
-       * room to breathe without being clipped on smaller viewports.
-       * Original was 0 0 420 420; we expand by 30px per side → -30 -30 480 480
+       * viewBox expanded to give labels breathing room on all sides,
+       * especially the leftward-extending labels (180° node = "Smart Urdu
+       * Novel Bank") on narrow viewports. Extra 60px left, 50px top/bottom,
+       * 60px right keep proportions balanced without clipping.
        */}
       <svg
-        viewBox="-30 -30 480 480"
+        viewBox="-60 -50 540 520"
         role="img"
         aria-label="Illustration of a manuscript unfolding into a connected digital ecosystem of readers, writers, community and platforms"
         className="mx-auto w-full max-w-md"
         style={{ overflow: "visible" }}
       >
+        {/*
+          Responsive font size for node labels.
+          CSS px on SVG text is subject to the viewBox CTM, so:
+            mobile (375px viewport, viewBox 540 wide): 13px × (375/540) ≈ 9px rendered
+            but that's still bigger than current 9.5 × (375/480) ≈ 7.4px.
+          At ≥640px (desktop, SVG capped at max-w-md ≈ 448px): 9.5px stays as-is.
+        */}
+        <style>{`
+          .eco-label { font-size: 13px; }
+          @media (min-width: 640px) { .eco-label { font-size: 9.5px; } }
+        `}</style>
         <defs>
           <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor="var(--card)" />
@@ -167,10 +179,10 @@ export function EcosystemIllustration() {
                 x={lx}
                 y={ly + dy}
                 textAnchor={anchor}
-                fontSize="9.5"
                 fontFamily="var(--font-sans)"
                 fontWeight="600"
                 letterSpacing="0.01em"
+                className="eco-label"
                 fill={isHovered ? "var(--gold)" : "var(--muted-foreground)"}
                 stroke="var(--background)"
                 strokeWidth="3"
