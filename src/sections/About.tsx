@@ -8,14 +8,11 @@ export function About() {
       <div className="mx-auto grid max-w-6xl gap-12 px-5 lg:grid-cols-[0.85fr_1.15fr]">
         <Reveal>
           <figure className="lg:sticky lg:top-28">
-            <div className="flex aspect-[4/5] w-full max-w-xs flex-col items-center justify-center rounded-sm border border-border bg-secondary">
-              <div className="px-6 text-center">
-                <p className="font-urdu text-2xl text-accent">قاری</p>
-                <p className="mt-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                  [YOUR PHOTO]
-                </p>
-              </div>
-            </div>
+            <img
+              src="/images/founder-avatar.png"
+              alt="Founder of Urdu Novel Bank"
+              className="aspect-[4/5] w-full max-w-xs rounded-sm border border-border object-cover bg-secondary"
+            />
             <figcaption className="mt-3 max-w-xs text-xs text-muted-foreground">
               Founder of Urdu Novel Bank — reader first, builder second. Started {stats.startDate}.
             </figcaption>
